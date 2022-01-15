@@ -66,52 +66,76 @@ class MySemNet(SemanticNetwork):
 
         conf = lambda n,T : (n/(2*T)) + (1-(n/(2*T))) * (1 - 0.95**n) * (0.95) ** (T-n)
 
-        # self.query(entity, assoc)
-        # count_dict = {}
-        # for d in self.query_result:
-        #     e2 = d.relation.entity2 
-
-        #     if e2 not in count_dict.keys():
-        #         count_dict[e2] = 1
-        #     else:
-        #         count_dict[e2] += 1
-
-        # T = sum(count_dict.values())
-
-        # for k,v in count_dict.items():
-        #     count_dict[k] = conf(v,T)
-
-
-
-        count_dict = {}
         local = [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
-        for d in local:
-            e2 = d.relation.entity2 
-
-            if e2 not in count_dict.keys():
-                count_dict[e2] = 1
-            else:
-                count_dict[e2] += 1
-
-        T = sum(count_dict.values())
-
-        for k,v in count_dict.items():
-            count_dict[k] = conf(v,T)
-
-
 
         inherited = [self.query_with_confidence(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
 
-        print(inherited)
+        local_dict = {}
+        for d in local:
+            e2 = d.relation.entity2 
+
+            if e2 not in local_dict.keys():
+                local_dict[e2] = 1
+            else:
+                local_dict[e2] += 1
+
+        T = sum(local_dict.values())
+
+        for k,v in local_dict.items():
+            local_dict[k] = conf(v,T)
 
 
+
+
+
+        # print(f' #local {len(local)} | #inherited {len(inherited)} | {local_dict} | {inherited}')
+        # print([item for sublist in inherited for item in sublist])
+        
+
+        
+
+
+
+
+
+
+
+
+        if len(inherited) == 0: # do nothing
+            return local_dict
+
+        elif len(local) == 0: # discount 10%
+
+            inherited_dict = {}
+
+            for p in inherited:
+                for k,v in p.items():
+                    if k in inherited_dict:
+                        inherited_dict[k] += v
+                    else:
+                        inherited_dict[k] = v
+
+
+            for k,v in inherited_dict.items():
+                inherited_dict[k] = v / len(inherited) * 0.9
+
+            # for k,v in inherited.items():
+            #     inherited[k] = v / len(inherited) * 0.9
+
+            return inherited_dict
+
+
+
+        # else:
+        #     pass
+
+        return local_dict
 
 
 
 
         
 
-        return count_dict
 
 
     # def query(self, entity, assoc):
