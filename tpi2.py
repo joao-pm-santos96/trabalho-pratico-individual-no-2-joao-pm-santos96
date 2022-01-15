@@ -9,7 +9,9 @@ class MySemNet(SemanticNetwork):
     def __init__(self):
         SemanticNetwork.__init__(self)
         # IMPLEMENT HERE (if needed)
-        pass
+
+        self.inherited = None
+        self.local = None
 
     def source_confidence(self,user):
         
@@ -62,44 +64,67 @@ class MySemNet(SemanticNetwork):
 
     def query_with_confidence(self, entity, assoc):
 
-        # n = 0
-        # T = 0
-        # print('='*10)
-        # print(f'entity {entity} | assoc {assoc}')
+        conf = lambda n,T : (n/(2*T)) + (1-(n/(2*T))) * (1 - 0.95**n) * (0.95) ** (T-n)
+
+        self.query(entity, assoc)
+        count_dict = {}
+        for d in self.query_result:
+            e2 = d.relation.entity2 
+
+            if e2 not in count_dict.keys():
+                count_dict[e2] = 1
+            else:
+                count_dict[e2] += 1
+
+        T = sum(count_dict.values())
+
+        for k,v in count_dict.items():
+            count_dict[k] = conf(v,T)
 
 
-        # print(self.query(entity, assoc))
         
-        # self.query_local(e1=entity, relname=assoc)
-        # self.show_query_result()
-        
-        # print(len(self.query(entity)))
-        # print('='*10)
-        
-        
-
-        return None
-
     
 
-    def query(self, entity, assoc=None):
+
+
+
+
+
+
+        # # TODO don't repeat this...
+        # inherited = [self.query(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
+        # inherited = [item for sublist in inherited for item in sublist]
+
+        # local = [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
+
+        # print(f' inherited {len(inherited)}')
+        # print(f' local {len(local)}')
+
+        # if len(inherited) == 0:
+        #     pass
+
+        # elif len(local) == 0:
+
+        #     for k,v in count_dict.items():
+        #         count_dict[k] = v * 0.9
+
+
+        # else:
+        #     pass
+        #     # TODO
+
         
-        # TODO remove method
-        queries_pred_b = [self.query(d.relation.entity2, assoc) for d in self.declarations if isinstance(d.relation, (Member, Subtype)) and d.relation.entity1 == entity]
-        
-        return [d for sublist in queries_pred_b for d in sublist] + self.query_local(e1=entity, relname=assoc)
 
-    # def query_local(self,user=None,e1=None,rel=None,e2=None,rel_type=None):
+        return count_dict
 
-    #     self.query_result = \
-    #         [ d for d in self.declarations
-    #             if  (user == None or d.user==user)
-    #             and (e1 == None or d.relation.entity1 == e1)
-    #             and (rel == None or d.relation.name == rel)
-    #             and (rel_type == None or isinstance(d.relation,rel_type))]
 
-    #     return self.query_result
+    def query(self, entity, assoc):
 
+        inherited = [self.query(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
+
+        self.query_result = [item for sublist in inherited for item in sublist] + [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
+
+        return self.query_result
 
 
 class MyBN(BayesNet):
