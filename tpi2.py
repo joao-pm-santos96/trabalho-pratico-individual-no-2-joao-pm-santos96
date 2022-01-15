@@ -84,10 +84,6 @@ class MySemNet(SemanticNetwork):
         for k,v in local_dict.items():
             local_dict[k] = conf(v,T)
 
-        
-        # print([item for sublist in inherited for item in sublist])   
-        # 
-
         inherited_dict = {}
         for p in inherited:
             for k,v in p.items():
@@ -97,15 +93,17 @@ class MySemNet(SemanticNetwork):
                     inherited_dict[k] = v    
 
         n_parents = len(inherited)
-        for k,v in inherited_dict.items():
-            inherited_dict[k] = v / (n_parents if n_parents > 0 else 1) * 0.9 
 
-        inherited = [a for a in inherited if bool(a)]
+        inherited = [a for a in inherited if bool(a)] # remove parent with no results
 
         if len(inherited) == 0: # do nothing
             return local_dict
 
         elif len(local) == 0: # discount 10%
+
+            for k,v in inherited_dict.items():
+                inherited_dict[k] = v / (n_parents if n_parents > 0 else 1) * 0.9 
+
             return inherited_dict
 
         else:
@@ -120,13 +118,13 @@ class MySemNet(SemanticNetwork):
             for k in common_dict.keys():
 
                 if k in local_dict.keys() and k in inherited_dict.keys():
-                    common_dict[k] = local_dict[k] * 0.9 + inherited_dict[k] * 0.1
+                    common_dict[k] = local_dict[k] * 0.9 + inherited_dict[k] / (n_parents if n_parents > 0 else 1) * 0.1
 
                 elif k in local_dict.keys():
                     common_dict[k] = local_dict[k] * 0.9
 
                 elif k in inherited_dict.keys():
-                    common_dict[k] = inherited_dict[k] * 0.1
+                    common_dict[k] = inherited_dict[k] / (n_parents if n_parents > 0 else 1) * 0.1
 
             return common_dict
 
