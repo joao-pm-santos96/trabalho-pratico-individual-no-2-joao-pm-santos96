@@ -66,9 +66,26 @@ class MySemNet(SemanticNetwork):
 
         conf = lambda n,T : (n/(2*T)) + (1-(n/(2*T))) * (1 - 0.95**n) * (0.95) ** (T-n)
 
-        self.query(entity, assoc)
+        # self.query(entity, assoc)
+        # count_dict = {}
+        # for d in self.query_result:
+        #     e2 = d.relation.entity2 
+
+        #     if e2 not in count_dict.keys():
+        #         count_dict[e2] = 1
+        #     else:
+        #         count_dict[e2] += 1
+
+        # T = sum(count_dict.values())
+
+        # for k,v in count_dict.items():
+        #     count_dict[k] = conf(v,T)
+
+
+
         count_dict = {}
-        for d in self.query_result:
+        local = [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
+        for d in local:
             e2 = d.relation.entity2 
 
             if e2 not in count_dict.keys():
@@ -82,49 +99,28 @@ class MySemNet(SemanticNetwork):
             count_dict[k] = conf(v,T)
 
 
-        
-    
+
+        inherited = [self.query_with_confidence(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
+
+        print(inherited)
 
 
 
 
 
-
-
-        # # TODO don't repeat this...
-        # inherited = [self.query(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
-        # inherited = [item for sublist in inherited for item in sublist]
-
-        # local = [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
-
-        # print(f' inherited {len(inherited)}')
-        # print(f' local {len(local)}')
-
-        # if len(inherited) == 0:
-        #     pass
-
-        # elif len(local) == 0:
-
-        #     for k,v in count_dict.items():
-        #         count_dict[k] = v * 0.9
-
-
-        # else:
-        #     pass
-        #     # TODO
 
         
 
         return count_dict
 
 
-    def query(self, entity, assoc):
+    # def query(self, entity, assoc):
 
-        inherited = [self.query(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
+    #     inherited = [self.query(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
 
-        self.query_result = [item for sublist in inherited for item in sublist] + [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
+    #     self.query_result = [item for sublist in inherited for item in sublist] + [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
 
-        return self.query_result
+    #     return self.query_result
 
 
 class MyBN(BayesNet):
