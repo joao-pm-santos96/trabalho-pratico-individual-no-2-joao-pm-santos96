@@ -84,68 +84,51 @@ class MySemNet(SemanticNetwork):
         for k,v in local_dict.items():
             local_dict[k] = conf(v,T)
 
-
-
-
-
-        # print(f' #local {len(local)} | #inherited {len(inherited)} | {local_dict} | {inherited}')
-        # print([item for sublist in inherited for item in sublist])
         
+        # print([item for sublist in inherited for item in sublist])   
+        # 
 
-        
+        inherited_dict = {}
+        for p in inherited:
+            for k,v in p.items():
+                if k in inherited_dict:
+                    inherited_dict[k] += v
+                else:
+                    inherited_dict[k] = v    
 
+        n_parents = len(inherited)
+        for k,v in inherited_dict.items():
+            inherited_dict[k] = v / (n_parents if n_parents > 0 else 1) * 0.9 
 
-
-
-
-
-
+        inherited = [a for a in inherited if bool(a)]
 
         if len(inherited) == 0: # do nothing
             return local_dict
 
         elif len(local) == 0: # discount 10%
-
-            inherited_dict = {}
-
-            for p in inherited:
-                for k,v in p.items():
-                    if k in inherited_dict:
-                        inherited_dict[k] += v
-                    else:
-                        inherited_dict[k] = v
-
-
-            for k,v in inherited_dict.items():
-                inherited_dict[k] = v / len(inherited) * 0.9
-
-            # for k,v in inherited.items():
-            #     inherited[k] = v / len(inherited) * 0.9
-
             return inherited_dict
 
+        else:
+            common_dict = {}
 
+            for k in local_dict.keys():
+                common_dict[k] = None
 
-        # else:
-        #     pass
+            for k in inherited_dict.keys():
+                common_dict[k] = None
 
-        return local_dict
+            for k in common_dict.keys():
 
+                if k in local_dict.keys() and k in inherited_dict.keys():
+                    common_dict[k] = local_dict[k] * 0.9 + inherited_dict[k] * 0.1
 
+                elif k in local_dict.keys():
+                    common_dict[k] = local_dict[k] * 0.9
 
+                elif k in inherited_dict.keys():
+                    common_dict[k] = inherited_dict[k] * 0.1
 
-        
-
-
-
-    # def query(self, entity, assoc):
-
-    #     inherited = [self.query(d.relation.entity2, assoc) for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, (Member, Subtype))]
-
-    #     self.query_result = [item for sublist in inherited for item in sublist] + [d for d in self.declarations if d.relation.entity1 == entity and isinstance(d.relation, AssocOne) and (assoc == None or d.relation.name == assoc)]
-
-    #     return self.query_result
-
+            return common_dict
 
 class MyBN(BayesNet):
 
